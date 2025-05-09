@@ -166,8 +166,8 @@ class VentanaPrincipal:
                     vencimiento_str = f"Error: {e}"
 
                 tabla.insert('', 'end', values=(
-                    producto.nombre, producto.codigo, vencimiento_str,
-                    f"${producto.precio:.2f}", producto.cantidad, producto.medida, producto.unidad))
+                    producto.nombre, producto.codigo, vencimiento_str, f"COP {producto.precio:,.2f}",  # Formato COP
+                    producto.cantidad, producto.medida, producto.unidad))
 
         def eliminar_producto_evento():
             try:
@@ -260,7 +260,7 @@ class VentanaPrincipal:
                 self._ver_ventas()
 
             except ValueError:
-                messagebox.showerror("Error", "La cantidad debe ser un número entero.")
+                messagebox.showerror("Error", "por favor llenar los campos requeridos para registrar la venta.")
             except Exception as e:
                 messagebox.showerror("Error", str(e))
 
@@ -273,10 +273,8 @@ class VentanaPrincipal:
             except Exception as e:
                 messagebox.showerror("Error", str(e))
 
-        tk.Button(ventas_win, text="Registrar Venta", command=registrar_venta,
-                  bg=self.BOTON2, fg="white", font=("Segoe UI", 10, "bold")).place(x=40, y=200)
-        tk.Button(ventas_win, text="Calcular Impuesto", command=calcular_impuesto,
-                  bg=self.BOTON4, fg="white", font=("Segoe UI", 10, "bold")).place(x=200, y=200)
+        tk.Button(ventas_win, text="Registrar Venta", command=registrar_venta, bg=self.BOTON2, fg="white", font=("Segoe UI", 10, "bold")).place(x=130, y=200)
+
 
     def _ver_ventas(self):
         win = tk.Toplevel()
@@ -287,7 +285,7 @@ class VentanaPrincipal:
         tk.Label(win, text="Historial de Ventas", font=("Segoe UI", 14, "bold"),
                  bg=self.FONDO, fg=self.TEXTO).pack(pady=10)
 
-        columnas = ("Producto", "Cantidad", "Medida", "Unidad", "Fecha")
+        columnas = ("Producto", "Cantidad", "Medida", "Unidad", "Fecha","total")
         tabla = ttk.Treeview(win, columns=columnas, show="headings", height=30)
         for col in columnas:
             tabla.heading(col, text=col)
@@ -299,15 +297,26 @@ class VentanaPrincipal:
         tabla.pack(fill="both", expand=True)
 
         def actualizar_tabla():
-            tabla.delete(*tabla.get_children())
-            for venta in obtener_ventas():
-                tabla.insert('', 'end', values=(
-                    venta["nombre"], venta["cantidad"], venta["medida"], venta["unidad"],
-                    venta["fecha"]))
+                tabla.delete(*tabla.get_children())
+                for venta in obtener_ventas():
+                    precio_venta = obtener_producto_por_nombre(venta["nombre"]).precio * venta["cantidad"] if obtener_producto_por_nombre(venta["nombre"]) else 0
+                    tabla.insert('', 'end', values=(
+                        venta["nombre"], venta["cantidad"], venta["medida"], venta["unidad"],
+                        venta["fecha"], f"COP {precio_venta:,.2f}"))
 
         actualizar_tabla()
+        
+        def calcular_impuesto():
+            try:
+                total = obtener_ventas_totales()
+                impuesto = calcular_impuesto_anual(total)
+                messagebox.showinfo("Impuesto Anual",
+                                    f"Ventas Totales: ${total:.2f}\nImpuesto (Ventas Totales * 7 / 1000): ${impuesto:.3f}", parent=win)
+            except Exception as e:
+                messagebox.showerror("Error", str(e), parent=win)
+
+        tk.Button(win, text="Calcular Impuesto", command=calcular_impuesto,
+                  bg=self.BOTON4, fg="white", font=("Segoe UI", 15, "bold")).place(x=600, y=550)
 
     def ejecutar(self):
         self.ventana.mainloop()
-
-
