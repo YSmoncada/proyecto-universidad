@@ -278,7 +278,7 @@ class VentanaPrincipal:
         tk.Label(tabla_ventas, text="Historial de Ventas", font=("Segoe UI", 14, "bold"),
                  bg=self.FONDO, fg=self.TEXTO).pack(pady=10)
 
-        columnas = ("Producto", "Cantidad", "Medida", "Unidad", "Fecha","total")
+        columnas = ("Producto", "Cantidad", "Medida", "Unidad", "Fecha","Valor Unitario","total")
         tabla = ttk.Treeview(tabla_ventas, columns=columnas, show="headings", height=30)
         for col in columnas:
             tabla.heading(col, text=col)
@@ -292,11 +292,12 @@ class VentanaPrincipal:
         def actualizar_tabla():
                 tabla.delete(*tabla.get_children())
                 for venta in obtener_ventas():
-                    precio_venta = obtener_producto_por_nombre(venta["nombre"]).precio * venta["cantidad"] if obtener_producto_por_nombre(venta["nombre"]) else 0
+                    producto = obtener_producto_por_nombre(venta["nombre"])
+                    precio_venta = producto.precio * venta["cantidad"] if producto else 0
                     tabla.insert('', 'end', values=(
                         venta["nombre"], venta["cantidad"], venta["medida"], venta["unidad"],
-                        venta["fecha"], f"COP {precio_venta:,.2f}"))
-
+                        venta["fecha"], f"COP {producto.precio:,.2f}" if producto else "N/A", f"COP {precio_venta:,.2f}"))
+        
         actualizar_tabla()
         
         def calcular_impuesto():
